@@ -6,6 +6,6 @@ archive:
     type: tgz
     path: darwin-amd64/helm
   linux:
-    url: https://get.helm.sh/helm-v2.16.1-rc.2-linux-amd64.tar.gz
+    url: https://get.helm.sh/helm-v2.16.1-linux-amd64.tar.gz
     type: tgz
     path: linux-amd64/helm

@@ -4,11 +4,16 @@ IFS=$'\n\t '
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/lib/util.source
 
+INSTALL_PATH=''
+
 usage() {
 local SELF=`basename $0`
     cat <<EOF
 USAGE:
-  $SELF all
+  $SELF all [options]
+  Options:
+    --install <path>          : Install the binary to tartget path
+    --debug                   : Enable debug mode
 EOF
 }
 
@@ -45,6 +50,18 @@ download_all() {
   done
 }
 
+install_tool() {
+  pushd ${DIR}/tools > /dev/null
+  local app=$1
+  local name=$(yq r $app.yaml name)
+  local cache_path=${DIR}/.cache/$app
+
+  info "[Install] $name -> $INSTALL_PATH/$name"
+  install $cache_path/$name $INSTALL_PATH
+
+  popd > /dev/null
+}
+
 download_tool() {
   pushd ${DIR}/tools > /dev/null
   local app=$1
@@ -78,6 +95,10 @@ download_tool() {
   info "[$name] Download completed"
   tree $cache_path
   popd > /dev/null
+
+  if [[ "$INSTALL_PATH" != '' ]]; then
+    install_tool $app
+  fi
 }
 
 main() {
@@ -90,8 +111,24 @@ main() {
       all|list|cleanup)
         target=$1
       ;;
+      --install)
+        shift
+        INSTALL_PATH=${1}
+        if [[ "$INSTALL_PATH" == '' ]]; then
+          error "Should provide install path"
+          usage
+          exit 1
+        elif [ ! -d $INSTALL_PATH ]; then
+          error "Should provide correct install path"
+          exit 1
+        fi
+      ;;
       --debug)
         set -x
+      ;;
+      -h|--help)
+        usage
+        exit
       ;;
       *)
         if ! contains "$TOOLS_LIST" $1; then
