@@ -1,0 +1,123 @@
+#! /bin/bash
+set -eo pipefail
+IFS=$'\n\t '
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/lib/util.source
+
+usage() {
+local SELF=`basename $0`
+    cat <<EOF
+USAGE:
+  $SELF all
+EOF
+}
+
+prepare_downloader() {
+  check_yq
+
+  # Load tools list
+  pushd ${DIR}/tools > /dev/null
+  TOOLS_LIST=$(ls *.yaml | sed -e 's/\.yaml//g')
+  popd > /dev/null
+}
+
+get_tools() {
+  pushd ${DIR}/tools > /dev/null
+  ls *.yaml | sed -e 's/\.yaml//g'
+  popd > /dev/null
+}
+
+list_tools() {
+  pushd ${DIR}/tools > /dev/null
+  TOOLS_LIST=$(get_tools)
+  info "Starterkit tools"
+  for app in $TOOLS_LIST; do
+    local version=$(yq r $app.yaml version)
+    echo "  $app@$version"
+  done
+  popd > /dev/null
+}
+
+download_all() {
+  local TOOLS_LIST=$(get_tools)
+  for app in $TOOLS_LIST; do
+    download_tool $app
+  done
+}
+
+download_tool() {
+  pushd ${DIR}/tools > /dev/null
+  local app=$1
+  local name=$(yq r $app.yaml name)
+  local version=$(yq r $app.yaml version)
+  local platform=$(uname | tr '[:upper:]' '[:lower:]')
+  local archive_url=$(yq r $app.yaml archive.$platform.url)
+
+  info "[Fetch] $name@$version from $archive_url"
+  mkdir -p ${DIR}/.cache/$app
+  local cache_path=${DIR}/.cache/$app
+  local type=$(yq r $app.yaml archive.$platform.type)
+  case "$type" in
+    tgz)
+      # curl -L -o $cache_path/$name.$type $archive_url
+      ${DIR}/bin/cached_curl $cache_path/$name.$type $archive_url
+      tar zxf $cache_path/$name.$type -C $cache_path
+    ;;
+    *)
+      # curl -L -o $cache_path/$name $archive_url
+      ${DIR}/bin/cached_curl $cache_path/$name $archive_url
+    ;;
+  esac
+
+  local bin_path=$(yq r $app.yaml archive.$platform.path)
+  if [[ "$bin_path" != "null" ]]; then
+    mv $cache_path/$bin_path $cache_path/$name
+  fi
+
+  chmod +x $cache_path/$name
+  info "[$name] Download completed"
+  tree $cache_path
+  popd > /dev/null
+}
+
+main() {
+  local target=''
+
+  prepare_downloader
+
+  while (( "$#" )); do
+    case "${1:-}" in
+      all|list|cleanup)
+        target=$1
+      ;;
+      --debug)
+        set -x
+      ;;
+      *)
+        if ! contains "$TOOLS_LIST" $1; then
+          error "[Error] Not support tools"
+          exit 1
+        fi
+        target=$1
+      ;;
+    esac
+    shift || (usage; exit 1)
+  done
+
+  case "$target" in
+    list)
+      list_tools
+    ;;
+    all)
+      download_all
+    ;;
+    cleanup)
+      rm -rf ${DIR}/.cache/*
+    ;;
+    *)
+      download_tool $target
+    ;;
+  esac
+}
+
+main "$@"

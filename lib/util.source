@@ -1,0 +1,56 @@
+#! /bin/bash
+
+info() {
+  echo -e "\033[0;32m$1\033[0m"
+}
+
+warn() {
+  echo -e "\033[0;93m$1\033[0m"
+}
+
+error() {
+  echo -e "\033[0;91m$1\033[0m" >&2
+}
+
+OS_TYPE=$(uname)
+
+is_mac() {
+  if [ ${OS_TYPE} == "Darwin" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+is_linux() {
+  if [ ${OS_TYPE} == "Linux" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+contains() {
+    [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]] && return 0 || return 1
+}
+
+check_yq() {
+  if ! command -v yq > /dev/null; then
+    info "[Download] yq ${YQ_VERSION}"
+    pushd ${DIR}/bin > /dev/null
+    case "$(uname)" in
+      Darwin)
+        curl -s -o yq -L "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_darwin_amd64" && chmod +x yq
+      ;;
+      Linux)
+        curl -s -o yq -L "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" && chmod +x yq
+      ;;
+      *)
+        error "[Error] OS $(uname) not support!"
+        exit 1
+      ;;
+    esac
+    export PATH=$PATH:$PWD
+    popd > /dev/null
+  fi
+}

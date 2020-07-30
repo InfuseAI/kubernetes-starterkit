@@ -1,0 +1,11 @@
+name: kubectl
+version: v1.18.0
+archive:
+  darwin:
+    url: https://dl.k8s.io/v1.18.0/kubernetes-client-darwin-amd64.tar.gz
+    type: tgz
+    path: kubernetes/client/bin/kubectl
+  linux:
+    url: https://dl.k8s.io/v1.18.0/kubernetes-client-linux-arm64.tar.gz
+    type: tgz
+    path: kubernetes/client/bin/kubectl

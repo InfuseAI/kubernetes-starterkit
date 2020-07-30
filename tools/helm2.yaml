@@ -1,0 +1,11 @@
+name: helm2
+version: v2.16.1
+archive:
+  darwin:
+    url: https://get.helm.sh/helm-v2.16.1-darwin-amd64.tar.gz
+    type: tgz
+    path: darwin-amd64/helm
+  linux:
+    url: https://get.helm.sh/helm-v2.16.1-rc.2-linux-amd64.tar.gz
+    type: tgz
+    path: linux-amd64/helm

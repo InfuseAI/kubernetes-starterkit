@@ -1,0 +1,7 @@
+name: helmfile2
+version: v0.40.3
+archive:
+  darwin:
+    url: https://github.com/roboll/helmfile/releases/download/v0.40.3/helmfile_darwin_amd64
+  linux:
+    url: https://github.com/roboll/helmfile/releases/download/v0.40.3/helmfile_linux_amd64
