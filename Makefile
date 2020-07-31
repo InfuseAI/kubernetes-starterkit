@@ -14,6 +14,7 @@ download:
 install:
 	@mkdir ~/bin
 	./download all --install ~/bin
+	install misc/helm-switch/helm-switch.bash ~/bin/helm-switch
 
 clean:
 	./downloader cleanup
