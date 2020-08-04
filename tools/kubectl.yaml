@@ -1,5 +1,6 @@
 name: kubectl
 version: v1.18.0
+description: Kubernetes client CLI
 archive:
   darwin:
     url: https://dl.k8s.io/v1.18.0/kubernetes-client-darwin-amd64.tar.gz

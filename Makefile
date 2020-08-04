@@ -1,4 +1,4 @@
-INSTALL_PATH ?= $(HOME)/bin
+INSTALL_PATH ?= /usr/local/bin
 
 .PHONY: help cleanup
 help:
@@ -12,9 +12,9 @@ download:
 	./downloader all
 
 install:
-	@mkdir ~/bin
-	./download all --install ~/bin
-	install misc/helm-switch/helm-switch.bash ~/bin/helm-switch
+	@mkdir -p $(INSTALL_PATH)
+	./downloader all --install $(INSTALL_PATH)
+	install misc/helm-switch/helm-switch.bash $(INSTALL_PATH)/helm-switch
 
 clean:
 	./downloader cleanup

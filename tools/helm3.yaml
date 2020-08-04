@@ -1,5 +1,6 @@
 name: helm3
 version: v3.2.4
+description: The Kubernetes Package Manager
 archive:
   darwin:
     url: https://get.helm.sh/helm-v3.2.4-darwin-amd64.tar.gz

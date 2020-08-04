@@ -65,6 +65,12 @@ install_tool() {
 download_tool() {
   pushd ${DIR}/tools > /dev/null
   local app=$1
+
+  if [ ! -f $app.yaml ]; then
+    error "[Error] No such tool $app"
+    return 1
+  fi
+
   local name=$(yq r $app.yaml name)
   local version=$(yq r $app.yaml version)
   local platform=$(uname | tr '[:upper:]' '[:lower:]')
@@ -99,6 +105,26 @@ download_tool() {
   if [[ "$INSTALL_PATH" != '' ]]; then
     install_tool $app
   fi
+}
+
+downloader_menu() {
+  local TOOLS_LIST=$(get_tools)
+  local whiptail_checklist_cmd='whiptail --title "Kubernetes Starter-Kit"  --checklist "Please select the tools to download" 20 90 10'
+
+  pushd ${DIR}/tools > /dev/null
+  for app in $TOOLS_LIST; do
+    local name=$(yq r $app.yaml name)
+    local description=$(yq r $app.yaml description)
+    local version=$(yq r $app.yaml version)
+    whiptail_checklist_cmd="$whiptail_checklist_cmd $name \"$description (Version: $version)\" ON"
+  done
+  popd > /dev/null
+  local CHOICES=$(
+  eval $whiptail_checklist_cmd 3>&2 2>&1 1>&3
+  )
+  for app in $CHOICES; do
+    download_tool "${app//\"}"
+  done
 }
 
 main() {
@@ -152,7 +178,11 @@ main() {
       rm -rf ${DIR}/.cache/*
     ;;
     *)
-      download_tool $target
+      if [ "$target" == "" ]; then
+        downloader_menu
+      else
+        download_tool $target
+      fi
     ;;
   esac
 }

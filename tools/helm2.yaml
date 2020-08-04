@@ -1,5 +1,6 @@
 name: helm2
 version: v2.16.1
+description: The Kubernetes Package Manager
 archive:
   darwin:
     url: https://get.helm.sh/helm-v2.16.1-darwin-amd64.tar.gz

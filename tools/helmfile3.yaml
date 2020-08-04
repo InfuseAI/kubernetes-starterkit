@@ -1,5 +1,6 @@
 name: helmfile3
 version: v0.121.0
+description: Deploy Kubernetes Helm Charts
 archive:
   darwin:
     url: https://github.com/roboll/helmfile/releases/download/v0.121.0/helmfile_darwin_amd64

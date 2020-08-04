@@ -1,5 +1,6 @@
 name: k9s
 version: v0.21.4
+description: Kubernetes CLI To Manage Your Clusters In Style!
 archive:
   darwin:
     url: https://github.com/derailed/k9s/releases/download/v0.21.4/k9s_Darwin_x86_64.tar.gz
