@@ -1,11 +1,13 @@
 #! /bin/bash
 
+SILENT=${SILENT:-false}
+
 info() {
-  echo -e "\033[0;32m$1\033[0m"
+  [ "$SILENT" == false ] && echo -e "\033[0;32m$1\033[0m" || true
 }
 
 warn() {
-  echo -e "\033[0;93m$1\033[0m"
+  [ "$SILENT" == false ] && echo -e "\033[0;93m$1\033[0m" || true
 }
 
 error() {

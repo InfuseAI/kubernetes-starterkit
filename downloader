@@ -43,10 +43,20 @@ list_tools() {
   popd > /dev/null
 }
 
+install_all() {
+  local TOOLS_LIST=$(get_tools)
+  for app in $TOOLS_LIST; do
+    install_tool $app
+  done
+}
+
 download_all() {
   local TOOLS_LIST=$(get_tools)
   for app in $TOOLS_LIST; do
     download_tool $app
+    if [ "$INSTALL_PATH" != '' ]; then
+      install_tool $app
+    fi
   done
 }
 
@@ -99,18 +109,14 @@ download_tool() {
 
   chmod +x $cache_path/$name
   info "[$name] Download completed"
-  tree $cache_path
+  if [ "$SILENT" == false ]; then tree $cache_path; fi
   popd > /dev/null
-
-  if [[ "$INSTALL_PATH" != '' ]]; then
-    install_tool $app
-  fi
 }
 
-downloader_menu() {
+downloader_menu::download_tools_checklist() {
   local TOOLS_LIST=$(get_tools)
-  local whiptail_checklist_cmd='whiptail --title "Kubernetes Starter-Kit"  --checklist "Please select the tools to download" 20 90 10'
-
+  local whiptail_checklist_cmd='whiptail --title "Kubernetes Starter-Kit" --checklist "Please select the tools to download" 18 90 10'
+  # Select download tools
   pushd ${DIR}/tools > /dev/null
   for app in $TOOLS_LIST; do
     local name=$(yq r $app.yaml name)
@@ -119,12 +125,79 @@ downloader_menu() {
     whiptail_checklist_cmd="$whiptail_checklist_cmd $name \"$description (Version: $version)\" ON"
   done
   popd > /dev/null
-  local CHOICES=$(
+
+  # Download the selected tools
   eval $whiptail_checklist_cmd 3>&2 2>&1 1>&3
-  )
+}
+
+downloader_menu::install_path_inputbox() {
+  INSTALL_PATH=$(whiptail --inputbox --title "Kubernetes Starter-Kit" "Please provide the install path\nOr skip install with empty" 8 60 $INSTALL_PATH 3>&1 1>&2 2>&3)
+
+  if [ "$INSTALL_PATH" == '' ]; then
+    return 0
+  fi
+
+  if [ ! -d "$INSTALL_PATH" ]; then
+    whiptail --title "Kubernetes Starter-Kit" --msgbox "  Invalid path: $INSTALL_PATH" 8 60
+    exit 1
+  fi
+}
+
+downloader_menu::download_progress() {
+  {
+  local COUNT=$(echo $CHOICES | awk '{print NF}')
+  local i=0
   for app in $CHOICES; do
-    download_tool "${app//\"}"
+    local name="${app//\"}"
+    # calculate progress
+    PCT=$(( 100*(++i)/COUNT ))
+    cat <<EOF
+XXX
+${PCT}
+Downloading ${name}
+XXX
+EOF
+    download_tool "${name}" || exit 1
   done
+  } | whiptail --title "Kubernetes Starter-Kit" --gauge "Downloading..." 6 60 0
+}
+
+downloader_menu::install_progress() {
+  if [ "$INSTALL_PATH" == '' ]; then
+    return 0
+  fi
+
+  {
+  local COUNT=$(echo $CHOICES | awk '{print NF}')
+  local i=0
+  for app in $CHOICES; do
+    local name="${app//\"}"
+    # calculate progress
+    PCT=$(( 100*(++i)/COUNT ))
+    cat <<EOF
+XXX
+${PCT}
+Install ${name} -> ${INSTALL_PATH}/${name}
+XXX
+EOF
+    install_tool "${name}" || exit 1
+    sleep 0.5
+  done
+  } | whiptail --title "Kubernetes Starter-Kit" --gauge "Install ..." 6 60 0
+}
+
+downloader_menu::complete() {
+  whiptail --title "Kubernetes Starter-Kit" --msgbox "Download completed" 7 42
+}
+
+downloader_menu() {
+  export SILENT=true
+
+  CHOICES=$(downloader_menu::download_tools_checklist)
+  downloader_menu::install_path_inputbox
+  downloader_menu::download_progress
+  downloader_menu::install_progress
+  downloader_menu::complete
 }
 
 main() {
@@ -182,6 +255,9 @@ main() {
         downloader_menu
       else
         download_tool $target
+        if [ "$INSTALL_PATH" != '' ]; then
+          install_tool $target
+        fi
       fi
     ;;
   esac
