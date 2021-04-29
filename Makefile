@@ -15,7 +15,6 @@ download:
 install:
 	@mkdir -p $(INSTALL_PATH)
 	./downloader all --install $(INSTALL_PATH)
-	install misc/helm-switch/helm-switch.bash $(INSTALL_PATH)/helm-switch
 
 clean:
 	./downloader cleanup
