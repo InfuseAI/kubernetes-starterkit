@@ -103,7 +103,7 @@ download_tool() {
   esac
 
   local bin_path=$(yq r $app.yaml archive.$platform.path)
-  if [[ "$bin_path" != "null" ]]; then
+  if [[ "$bin_path" != "null" && "$bin_path" != "" ]]; then
     mv $cache_path/$bin_path $cache_path/$name
   fi
 
